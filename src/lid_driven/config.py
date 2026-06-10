@@ -28,6 +28,12 @@ class SimulationConfig:
 
     # Lid velocity
     u_lid: float = 1.0
+    
+    # Poisson solver option
+    poisson_solver: str = "dct"  # Options: "dct" , "sor", "multigrid", or "bicgstab"
+    sor_omega: float = 1.7 # Relaxation factor for SOR solver
+    sor_tolerance: float = 1.0e-5 # Convergence tolerance for SOR solver
+    sor_max_iter: int = 10000 # Maximum iterations for SOR solver
 
     @property
     def dx(self) -> float:
@@ -36,3 +42,5 @@ class SimulationConfig:
     @property
     def dy(self) -> float:
         return (self.ymax - self.y0) / (self.ny - 2)
+    
+    

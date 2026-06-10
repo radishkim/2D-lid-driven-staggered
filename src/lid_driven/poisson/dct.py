@@ -2,7 +2,7 @@ import numpy as np
 from scipy.fft import dctn, idctn
 
 
-def solve_poisson_dct_neumann(f, dx, dy):
+def solve_poisson_dct(f, dx, dy):
     """
     Solve the pressure Poisson equation with homogeneous Neumann
     boundary conditions using DCT.

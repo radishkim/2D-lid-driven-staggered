@@ -21,7 +21,7 @@ def main():
 
     os.makedirs("results/data", exist_ok=True)
 
-    save_path = "results/data/solution_Re100.npz"
+    save_path = "results/data/solution_Re100_dct.npz"
 
     np.savez(
         save_path,

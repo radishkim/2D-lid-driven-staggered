@@ -22,7 +22,7 @@ from lid_driven.plotting import (
 
 
 def main():
-    data_path = "results/data/solution_Re100.npz"
+    data_path = "results/data/solution_Re100_dct.npz"
 
     if not os.path.exists(data_path):
         raise FileNotFoundError(

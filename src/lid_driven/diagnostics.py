@@ -75,7 +75,7 @@ def get_max_velocity(u, v):
     """
     Return maximum absolute velocity components.
     """
-    max_u = np.max(np.abs(u))
-    max_v = np.max(np.abs(v))
+    max_u = np.max(np.abs(u[1:-1, 1:-1]))
+    max_v = np.max(np.abs(v[1:-1, 1:-1]))
 
     return max_u, max_v
