@@ -1,6 +1,14 @@
 import numpy as np
 
-def solve_poisson_sor(rhs, dx, dy, omega, tolerance, max_iter):
+def solve_poisson_sor(
+    rhs,
+    dx,
+    dy,
+    omega,
+    tolerance,
+    max_iter,
+    initial=None,
+):
     
     """
     Solve the 2D Poisson equation using SOR.
@@ -39,7 +47,11 @@ def solve_poisson_sor(rhs, dx, dy, omega, tolerance, max_iter):
         Solution of the Poisson equation.
     """
     
-    phi = np.zeros_like(rhs)
+    rhs = rhs.copy()
+    rhs[1:-1, 1:-1] -= rhs[1:-1, 1:-1].mean()
+
+    phi = np.zeros_like(rhs) if initial is None else initial.copy()
+    phi -= np.mean(phi[1:-1, 1:-1])
     
     dx2 = dx * dx
     dy2 = dy * dy

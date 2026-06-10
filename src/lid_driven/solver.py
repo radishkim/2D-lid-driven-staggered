@@ -15,7 +15,7 @@ from .operators import (
     project_velocity,
     update_pressure,
 )
-from .poisson import solve_poisson_dct, solve_poisson_sor
+from .poisson import solve_poisson
 
 
 def run_simulation(config):
@@ -98,23 +98,7 @@ def run_simulation(config):
         # --------------------------------------------------------
         # 4-5. Solve pressure correction Poisson equation
         # --------------------------------------------------------
-        poisson_solver = config.poisson_solver.lower()
-        
-        if poisson_solver == "dct":
-            phi = solve_poisson_dct(f, dx, dy)
-            
-        elif poisson_solver == "sor":
-            phi = solve_poisson_sor(
-                f,
-                dx,
-                dy,
-                config.sor_omega,
-                config.sor_tolerance,
-                config.sor_max_iter,
-            )
-            
-        else:
-            raise ValueError(f"Unknown Poisson solver: {config.poisson_solver}")
+        phi = solve_poisson(f, dx, dy, config, initial=phi)
 
         # --------------------------------------------------------
         # 4-6. Velocity projection

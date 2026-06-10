@@ -18,7 +18,7 @@ class SimulationConfig:
     ny: int = 130
 
     # Physical and numerical parameters
-    re: float = 100.0
+    re: float = 500.0
     dt: float = 0.005
     max_timestep: int = 1_000_000
 
@@ -30,10 +30,23 @@ class SimulationConfig:
     u_lid: float = 1.0
     
     # Poisson solver option
-    poisson_solver: str = "dct"  # Options: "dct" , "sor", "multigrid", or "bicgstab"
-    sor_omega: float = 1.7 # Relaxation factor for SOR solver
-    sor_tolerance: float = 1.0e-5 # Convergence tolerance for SOR solver
-    sor_max_iter: int = 10000 # Maximum iterations for SOR solver
+    poisson_solver: str = "dct"
+
+    # SOR parameters
+    sor_omega: float = 1.7
+    sor_tolerance: float = 1.0e-5
+    sor_max_iter: int = 10000
+
+    # Multigrid parameters
+    multigrid_tolerance: float = 1.0e-5
+    multigrid_max_cycles: int = 100
+    multigrid_pre_smooth: int = 3
+    multigrid_post_smooth: int = 3
+    multigrid_omega: float = 0.8
+
+    # BiCGSTAB parameters
+    bicgstab_tolerance: float = 1.0e-5
+    bicgstab_max_iter: int = 10000
 
     @property
     def dx(self) -> float:
@@ -42,5 +55,3 @@ class SimulationConfig:
     @property
     def dy(self) -> float:
         return (self.ymax - self.y0) / (self.ny - 2)
-    
-    

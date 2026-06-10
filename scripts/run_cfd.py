@@ -1,3 +1,4 @@
+import argparse
 import os
 import sys
 import numpy as np
@@ -9,19 +10,35 @@ sys.path.append(SRC_DIR)
 
 from lid_driven.config import SimulationConfig
 from lid_driven.grid import create_grid
+from lid_driven.output import get_data_path
 from lid_driven.solver import run_simulation
 
 
+POISSON_SOLVER = "dct"
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "poisson_solver",
+        nargs="?",
+        default=POISSON_SOLVER,
+        choices=("dct", "sor", "multigrid", "bicgstab"),
+    )
+    return parser.parse_args()
+
+
 def main():
-    config = SimulationConfig()
+    args = parse_args()
+    config = SimulationConfig(poisson_solver=args.poisson_solver)
 
     x, y = create_grid(config)
 
     results = run_simulation(config)
 
-    os.makedirs("results/data", exist_ok=True)
-
-    save_path = "results/data/solution_Re100_dct.npz"
+    solver_name = config.poisson_solver.lower()
+    save_path = get_data_path(PROJECT_ROOT, config.re, solver_name)
+    save_path.parent.mkdir(parents=True, exist_ok=True)
 
     np.savez(
         save_path,
@@ -39,6 +56,7 @@ def main():
         dy=config.dy,
         re=config.re,
         dt=config.dt,
+        poisson_solver=solver_name,
     )
 
     print("Simulation finished.")

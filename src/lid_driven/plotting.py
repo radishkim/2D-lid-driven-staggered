@@ -11,7 +11,18 @@ def _prepare_output_dir(save_dir):
     os.makedirs(save_dir, exist_ok=True)
 
 
-def plot_velocity_magnitude(x, y, velocity_magnitude, save_dir="results/figures"):
+def _figure_filename(name, case_name):
+    suffix = f"_{case_name}" if case_name else ""
+    return f"{name}{suffix}.png"
+
+
+def plot_velocity_magnitude(
+    x,
+    y,
+    velocity_magnitude,
+    save_dir="results/figures",
+    case_name=None,
+):
     """
     Plot velocity magnitude contour.
     """
@@ -44,11 +55,18 @@ def plot_velocity_magnitude(x, y, velocity_magnitude, save_dir="results/figures"
     plt.gca().set_aspect("equal")
 
     plt.tight_layout()
-    plt.savefig(os.path.join(save_dir, "velocity_magnitude_Re100.png"), dpi=300)
+    filename = _figure_filename("velocity_magnitude", case_name)
+    plt.savefig(os.path.join(save_dir, filename), dpi=300)
     plt.show()
 
 
-def plot_pressure(x, y, pcol, save_dir="results/figures"):
+def plot_pressure(
+    x,
+    y,
+    pcol,
+    save_dir="results/figures",
+    case_name=None,
+):
     """
     Plot pressure contour.
     """
@@ -66,11 +84,18 @@ def plot_pressure(x, y, pcol, save_dir="results/figures"):
     plt.gca().set_aspect("equal")
 
     plt.tight_layout()
-    plt.savefig(os.path.join(save_dir, "pressure_Re100.png"), dpi=300)
+    filename = _figure_filename("pressure", case_name)
+    plt.savefig(os.path.join(save_dir, filename), dpi=300)
     plt.show()
 
 
-def plot_vorticity(x, y, omega, save_dir="results/figures"):
+def plot_vorticity(
+    x,
+    y,
+    omega,
+    save_dir="results/figures",
+    case_name=None,
+):
     """
     Plot vorticity contour lines.
     """
@@ -103,11 +128,19 @@ def plot_vorticity(x, y, omega, save_dir="results/figures"):
     plt.gca().set_aspect("equal")
 
     plt.tight_layout()
-    plt.savefig(os.path.join(save_dir, "vorticity_contour_Re100.png"), dpi=300)
+    filename = _figure_filename("vorticity_contour", case_name)
+    plt.savefig(os.path.join(save_dir, filename), dpi=300)
     plt.show()
 
 
-def plot_streamlines(x, y, ucol, vcol, save_dir="results/figures"):
+def plot_streamlines(
+    x,
+    y,
+    ucol,
+    vcol,
+    save_dir="results/figures",
+    case_name=None,
+):
     """
     Plot streamlines from collocated velocity fields.
     """
@@ -135,11 +168,16 @@ def plot_streamlines(x, y, ucol, vcol, save_dir="results/figures"):
     plt.gca().set_aspect("equal")
 
     plt.tight_layout()
-    plt.savefig(os.path.join(save_dir, "streamlines_Re100.png"), dpi=300)
+    filename = _figure_filename("streamlines", case_name)
+    plt.savefig(os.path.join(save_dir, filename), dpi=300)
     plt.show()
 
 
-def plot_convergence(error_history, save_dir="results/figures"):
+def plot_convergence(
+    error_history,
+    save_dir="results/figures",
+    case_name=None,
+):
     """
     Plot convergence history.
     """
@@ -153,5 +191,6 @@ def plot_convergence(error_history, save_dir="results/figures"):
     plt.title("Convergence History")
 
     plt.tight_layout()
-    plt.savefig(os.path.join(save_dir, "convergence_Re100.png"), dpi=300)
+    filename = _figure_filename("convergence", case_name)
+    plt.savefig(os.path.join(save_dir, filename), dpi=300)
     plt.show()
