@@ -15,7 +15,7 @@ from lid_driven.output import get_data_path
 from lid_driven.solver import run_simulation
 
 
-POISSON_SOLVER = "sor"
+POISSON_SOLVER = "bicgstab"
 
 
 def parse_args():
