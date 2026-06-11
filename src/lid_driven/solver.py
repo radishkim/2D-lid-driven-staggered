@@ -18,7 +18,7 @@ from .operators import (
 from .poisson import solve_poisson
 
 
-def run_simulation(config):
+def run_simulation(config, checkpoint_callback=None):
     """
     Run the 2D lid-driven cavity simulation on a staggered grid.
 
@@ -68,81 +68,106 @@ def run_simulation(config):
     # ------------------------------------------------------------
     # 4. Time marching loop
     # ------------------------------------------------------------
-    for timestep in range(config.max_timestep):
+    timestep = -1
+    interrupted = False
 
-        # --------------------------------------------------------
-        # 4-1. Compute momentum RHS
-        # --------------------------------------------------------
-        rhsu = compute_u_rhs(u, v, up, vp, dx, dy, dt, re)
-        rhsv = compute_v_rhs(u, v, up, vp, dx, dy, dt, re)
+    try:
+        for timestep in range(config.max_timestep):
 
-        # --------------------------------------------------------
-        # 4-2. Solve implicit diffusion part using TDMA
-        # --------------------------------------------------------
-        du = solve_u_diffusion_tdma(rhsu, dx, dy, dt, re)
-        dv = solve_v_diffusion_tdma(rhsv, dx, dy, dt, re)
+            # --------------------------------------------------------
+            # 4-1. Compute momentum RHS
+            # --------------------------------------------------------
+            rhsu = compute_u_rhs(u, v, up, vp, dx, dy, dt, re)
+            rhsv = compute_v_rhs(u, v, up, vp, dx, dy, dt, re)
 
-        # --------------------------------------------------------
-        # 4-3. Intermediate velocity
-        # --------------------------------------------------------
-        uhat = u + du
-        vhat = v + dv
+            # --------------------------------------------------------
+            # 4-2. Solve implicit diffusion part using TDMA
+            # --------------------------------------------------------
+            du = solve_u_diffusion_tdma(rhsu, dx, dy, dt, re)
+            dv = solve_v_diffusion_tdma(rhsv, dx, dy, dt, re)
 
-        uhat, vhat = apply_velocity_bc(uhat, vhat, u_lid, nx, ny)
+            # --------------------------------------------------------
+            # 4-3. Intermediate velocity
+            # --------------------------------------------------------
+            uhat = u + du
+            vhat = v + dv
 
-        # --------------------------------------------------------
-        # 4-4. Build pressure Poisson RHS
-        # --------------------------------------------------------
-        f = compute_divergence(uhat, vhat, dx, dy, dt)
+            uhat, vhat = apply_velocity_bc(uhat, vhat, u_lid, nx, ny)
 
-        # --------------------------------------------------------
-        # 4-5. Solve pressure correction Poisson equation
-        # --------------------------------------------------------
-        phi = solve_poisson(f, dx, dy, config, initial=phi)
+            # --------------------------------------------------------
+            # 4-4. Build pressure Poisson RHS
+            # --------------------------------------------------------
+            f = compute_divergence(uhat, vhat, dx, dy, dt)
 
-        # --------------------------------------------------------
-        # 4-6. Velocity projection
-        # --------------------------------------------------------
-        un, vn = project_velocity(uhat, vhat, phi, dx, dy, dt)
+            # --------------------------------------------------------
+            # 4-5. Solve pressure correction Poisson equation
+            # --------------------------------------------------------
+            phi = solve_poisson(f, dx, dy, config, initial=phi)
 
-        un, vn = apply_velocity_bc(un, vn, u_lid, nx, ny)
+            # --------------------------------------------------------
+            # 4-6. Velocity projection
+            # --------------------------------------------------------
+            un, vn = project_velocity(uhat, vhat, phi, dx, dy, dt)
 
-        # --------------------------------------------------------
-        # 4-7. Save previous velocity and update current velocity
-        # --------------------------------------------------------
-        up = u.copy()
-        vp = v.copy()
+            un, vn = apply_velocity_bc(un, vn, u_lid, nx, ny)
 
-        u = un.copy()
-        v = vn.copy()
+            # --------------------------------------------------------
+            # 4-7. Save previous velocity and update current velocity
+            # --------------------------------------------------------
+            up = u.copy()
+            vp = v.copy()
 
-        u, v = apply_velocity_bc(u, v, u_lid, nx, ny)
-        up, vp = apply_velocity_bc(up, vp, u_lid, nx, ny)
+            u = un.copy()
+            v = vn.copy()
 
-        # --------------------------------------------------------
-        # 4-8. Update pressure
-        # --------------------------------------------------------
-        p = update_pressure(phi, dx, dy, dt, re)
+            u, v = apply_velocity_bc(u, v, u_lid, nx, ny)
+            up, vp = apply_velocity_bc(up, vp, u_lid, nx, ny)
 
-        # --------------------------------------------------------
-        # 4-9. Check convergence
-        # --------------------------------------------------------
-        total_error = compute_velocity_error(u, v, up, vp)
-        error_history.append(total_error)
+            # --------------------------------------------------------
+            # 4-8. Update pressure
+            # --------------------------------------------------------
+            p = update_pressure(phi, dx, dy, dt, re)
 
-        if timestep % 100 == 0:
-            max_u, max_v = get_max_velocity(u, v)
+            # --------------------------------------------------------
+            # 4-9. Check convergence
+            # --------------------------------------------------------
+            total_error = compute_velocity_error(u, v, up, vp)
+            error_history.append(total_error)
 
-            print(
-                f"[Step {timestep:7d}] "
-                f"max|u| = {max_u:.6f}, "
-                f"max|v| = {max_v:.6f}, "
-                f"error = {total_error:.6e}"
-            )
+            if timestep % 100 == 0:
+                max_u, max_v = get_max_velocity(u, v)
 
-        if timestep > 5 and total_error < config.velocity_tolerance:
-            print(f"Converged at step {timestep}.")
-            break
+                print(
+                    f"[Step {timestep:7d}] "
+                    f"max|u| = {max_u:.6f}, "
+                    f"max|v| = {max_v:.6f}, "
+                    f"error = {total_error:.6e}"
+                )
+
+            interval = config.checkpoint_interval
+            if (
+                checkpoint_callback is not None
+                and interval > 0
+                and (timestep + 1) % interval == 0
+            ):
+                checkpoint_callback(
+                    {
+                        "u": u,
+                        "v": v,
+                        "p": p,
+                        "phi": phi,
+                        "error_history": np.array(error_history),
+                        "final_timestep": timestep,
+                        "interrupted": False,
+                    }
+                )
+
+            if timestep > 5 and total_error < config.velocity_tolerance:
+                print(f"Converged at step {timestep}.")
+                break
+    except KeyboardInterrupt:
+        interrupted = True
+        print(f"\nInterrupted at step {timestep}. Saving current state.")
 
     # ------------------------------------------------------------
     # 5. Return results
@@ -154,6 +179,7 @@ def run_simulation(config):
         "phi": phi,
         "error_history": np.array(error_history),
         "final_timestep": timestep,
+        "interrupted": interrupted,
     }
 
     return results

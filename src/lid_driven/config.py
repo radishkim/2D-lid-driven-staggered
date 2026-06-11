@@ -18,9 +18,10 @@ class SimulationConfig:
     ny: int = 130
 
     # Physical and numerical parameters
-    re: float = 500.0
+    re: float = 100.0
     dt: float = 0.005
     max_timestep: int = 1_000_000
+    checkpoint_interval: int = 1000
 
     # Convergence criteria
     velocity_tolerance: float = 1.0e-5
@@ -35,7 +36,7 @@ class SimulationConfig:
     # SOR parameters
     sor_omega: float = 1.7
     sor_tolerance: float = 1.0e-5
-    sor_max_iter: int = 10000
+    sor_max_iter: int = 1000
 
     # Multigrid parameters
     multigrid_tolerance: float = 1.0e-5

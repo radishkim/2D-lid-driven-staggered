@@ -45,3 +45,7 @@ __pycache__/
 # Simulation results
 results/data/*.npz
 results/figures/*.png
+
+# AI stuff
+AGENTS.md
+2D_Lid_Driven_CFD_Code_Report.pdf

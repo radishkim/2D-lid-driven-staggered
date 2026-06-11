@@ -87,6 +87,7 @@ nx: int = 130
 ny: int = 130
 dt: float = 0.005
 max_timestep: int = 1_000_000
+checkpoint_interval: int = 1000
 velocity_tolerance: float = 1.0e-5
 ```
 
@@ -94,6 +95,10 @@ Higher Reynolds numbers can require a smaller time step, a finer grid,
 or more time steps. Changing only `re` changes the physical parameter,
 but does not guarantee that the existing numerical settings are
 appropriate for every Reynolds number.
+
+`checkpoint_interval` controls how often the current solution is saved.
+With the default value, the `.npz` result file is updated every 1000
+time steps. Set it to `0` to disable periodic checkpoint saves.
 
 ### 2. Select the Poisson solver
 
@@ -194,6 +199,31 @@ results/figures/Re1000_sor/
 
 Results from different Reynolds numbers or Poisson solvers are stored
 separately and do not overwrite one another.
+
+## Saving Before Convergence
+
+The simulation does not need to reach `velocity_tolerance` before its
+current state can be saved.
+
+- The result `.npz` file is updated every `checkpoint_interval` steps.
+- Press `Ctrl+C` once in the simulation terminal to stop safely.
+- The solver catches the interrupt, returns the latest completed step,
+  and writes it to the normal result path.
+- Do not close the terminal or terminate the Python process from Task
+  Manager if the latest in-memory step must be preserved.
+
+For example, an interrupted `Re=500` SOR calculation is saved as:
+
+```text
+results/data/solution_Re500_sor.npz
+```
+
+The file contains `interrupted=True` when it was saved after `Ctrl+C`.
+It can be plotted normally:
+
+```powershell
+python scripts/plot_results.py sor
+```
 
 ## Command-Line Solver Override
 
