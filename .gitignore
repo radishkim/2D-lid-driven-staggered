@@ -1,5 +1,6 @@
-# Original files
+# Local notebooks and documentation
 notebooks/
+docs/
 
 # Python cache
 __pycache__/
@@ -31,24 +32,20 @@ dist/
 .coverage
 htmlcov/
 
-# Simulation output data
-results/data/*.npy
-results/data/*.npz
-results/data/*.csv
-results/figures/*.png
+# Simulation output directories
+# Keep only results/data/ and results/figures/ in Git.
+results/*
+!results/data/
+!results/figures/
+results/data/*
+results/figures/*
+!results/data/.gitkeep
+!results/figures/.gitkeep
 outputs/
 
 # Temporary files
 *.log
 *.tmp
-
-# Python cache
-__pycache__/
-*.pyc
-
-# Simulation results
-results/data/*.npz
-results/figures/*.png
 
 # AI stuff
 AGENTS.md
