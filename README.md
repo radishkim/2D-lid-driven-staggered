@@ -32,30 +32,17 @@ matplotlib
 pytest
 ```
 
-### 2. Select the Reynolds number
+### 2. Select the default case
 
-Edit `re` in [`src/lid_driven/config.py`](src/lid_driven/config.py):
-
-```python
-re: float = 100.0
-```
-
-For example, to run at `Re=500`:
-
-```python
-re: float = 500.0
-```
-
-### 3. Select the Poisson solver
-
-Edit the following value in
+The default Reynolds number and Poisson solver are defined together in
 [`scripts/run_cfd.py`](scripts/run_cfd.py):
 
 ```python
-POISSON_SOLVER = "bicgstab"
+REYNOLDS_NUMBER = 100.0
+POISSON_SOLVER = "sor"
 ```
 
-Available values:
+Available Poisson solver values are:
 
 ```python
 "dct"
@@ -64,34 +51,48 @@ Available values:
 "bicgstab"
 ```
 
-### 4. Run the simulation
+### 3. Run the simulation
 
 ```powershell
 python scripts/run_cfd.py
 ```
 
-With `Re=100` and `POISSON_SOLVER="bicgstab"`, the output is:
+With the defaults above, the output is:
 
 ```text
-results/data/solution_Re100_bicgstab.npz
+results/data/solution_Re100_sor.npz
 ```
 
-### 5. Generate figures
+The command line can override either default without editing a file:
+
+```powershell
+python scripts/run_cfd.py multigrid --re 500
+```
+
+The command above runs the multigrid solver at `Re=500`.
+
+### 4. Generate figures
 
 ```powershell
 python scripts/plot_results.py
 ```
 
-The figures are saved in:
+Use the same solver and Reynolds number when plotting an overridden
+case:
 
-```text
-results/figures/Re100_bicgstab/
+```powershell
+python scripts/plot_results.py multigrid --re 500
 ```
 
-## Command-Line Solver Selection
+The figures for that case are saved in:
 
-The Poisson solver can be selected temporarily without editing
-`POISSON_SOLVER`:
+```text
+results/figures/Re500_multigrid/
+```
+
+## Command-Line Case Selection
+
+The positional argument selects the Poisson solver:
 
 ```powershell
 python scripts/run_cfd.py dct
@@ -100,28 +101,42 @@ python scripts/run_cfd.py multigrid
 python scripts/run_cfd.py bicgstab
 ```
 
-Use the same solver name when generating figures:
+The optional `--re` argument selects the Reynolds number:
 
 ```powershell
-python scripts/plot_results.py dct
-python scripts/plot_results.py sor
-python scripts/plot_results.py multigrid
-python scripts/plot_results.py bicgstab
+python scripts/run_cfd.py sor --re 100
+python scripts/run_cfd.py dct --re 500
+python scripts/run_cfd.py multigrid --re 1000
 ```
 
-The Reynolds number is always read from `SimulationConfig.re`.
+Argument values take precedence over `REYNOLDS_NUMBER` and
+`POISSON_SOLVER`. If an argument is omitted, the corresponding value
+from `run_cfd.py` is used.
+
+Run the plotting command with the same case selection:
+
+```powershell
+python scripts/plot_results.py multigrid --re 1000
+```
 
 ---
 
 ## Current Default Configuration
 
-[`src/lid_driven/config.py`](src/lid_driven/config.py):
+[`scripts/run_cfd.py`](scripts/run_cfd.py):
+
+```python
+REYNOLDS_NUMBER = 100.0
+POISSON_SOLVER = "sor"
+```
+
+[`src/lid_driven/config.py`](src/lid_driven/config.py) supplies the
+remaining grid and numerical defaults:
 
 ```python
 nx: int = 130
 ny: int = 130
 
-re: float = 100.0
 dt: float = 0.005
 max_timestep: int = 1_000_000
 checkpoint_interval: int = 1000
@@ -130,14 +145,9 @@ velocity_tolerance: float = 1.0e-5
 u_lid: float = 1.0
 ```
 
-[`scripts/run_cfd.py`](scripts/run_cfd.py):
-
-```python
-POISSON_SOLVER = "bicgstab"
-```
-
-> The solver selected by `run_cfd.py` overrides the default
-> `poisson_solver` value in `config.py`.
+`run_cfd.py` passes the selected Reynolds number and Poisson solver to
+`SimulationConfig`. The field defaults in `config.py` remain fallbacks
+for code that creates `SimulationConfig()` directly.
 
 The grid spacing is computed automatically:
 
@@ -162,7 +172,8 @@ must be evaluated separately.
 ```text
 scripts/run_cfd.py
     |
-    +-- Create SimulationConfig
+    +-- Parse the Reynolds number and Poisson solver
+    +-- Create SimulationConfig with the selected case
     +-- Generate plotting coordinates x and y
     +-- Determine the result-file path
     |
@@ -653,19 +664,19 @@ figure.
 Run all solvers at the same Reynolds number:
 
 ```powershell
-python scripts/run_cfd.py dct
-python scripts/run_cfd.py sor
-python scripts/run_cfd.py multigrid
-python scripts/run_cfd.py bicgstab
+python scripts/run_cfd.py dct --re 500
+python scripts/run_cfd.py sor --re 500
+python scripts/run_cfd.py multigrid --re 500
+python scripts/run_cfd.py bicgstab --re 500
 ```
 
 Generate all figures:
 
 ```powershell
-python scripts/plot_results.py dct
-python scripts/plot_results.py sor
-python scripts/plot_results.py multigrid
-python scripts/plot_results.py bicgstab
+python scripts/plot_results.py dct --re 500
+python scripts/plot_results.py sor --re 500
+python scripts/plot_results.py multigrid --re 500
+python scripts/plot_results.py bicgstab --re 500
 ```
 
 The case names differ, so the output files do not overwrite one another.

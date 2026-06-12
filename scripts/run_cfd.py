@@ -15,18 +15,38 @@ from lid_driven.output import get_data_path
 from lid_driven.solver import run_simulation
 
 
-POISSON_SOLVER = "bicgstab"
+# These defaults are used when the corresponding command-line arguments
+# are omitted. Command-line values take precedence over these settings.
+REYNOLDS_NUMBER = 100.0
+POISSON_SOLVER = "sor"
 
 
-def parse_args():
-    parser = argparse.ArgumentParser()
+def positive_float(value):
+    value = float(value)
+    if value <= 0.0:
+        raise argparse.ArgumentTypeError("Reynolds number must be positive.")
+    return value
+
+
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser(
+        description="Run the 2D lid-driven cavity simulation."
+    )
     parser.add_argument(
         "poisson_solver",
         nargs="?",
         default=POISSON_SOLVER,
         choices=("dct", "sor", "multigrid", "bicgstab"),
+        help=f"pressure Poisson solver (default: {POISSON_SOLVER})",
     )
-    return parser.parse_args()
+    parser.add_argument(
+        "--re",
+        type=positive_float,
+        default=REYNOLDS_NUMBER,
+        metavar="VALUE",
+        help=f"Reynolds number (default: {REYNOLDS_NUMBER:g})",
+    )
+    return parser.parse_args(argv)
 
 
 def save_results(save_path, results, config, x, y):
@@ -59,7 +79,12 @@ def save_results(save_path, results, config, x, y):
 
 def main():
     args = parse_args()
-    config = SimulationConfig(poisson_solver=args.poisson_solver)
+    # Runtime case selection belongs to this entry point; SimulationConfig
+    # supplies the remaining numerical and grid settings.
+    config = SimulationConfig(
+        re=args.re,
+        poisson_solver=args.poisson_solver,
+    )
 
     x, y = create_grid(config)
     solver_name = config.poisson_solver.lower()

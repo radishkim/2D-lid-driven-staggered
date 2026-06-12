@@ -30,8 +30,8 @@ class SimulationConfig:
     # Lid velocity
     u_lid: float = 1.0
     
-    # Poisson solver option
-    poisson_solver: str = "dct"
+    # Poisson solver option, default is "sor"
+    poisson_solver: str = "sor"
 
     # SOR parameters
     sor_omega: float = 1.7
